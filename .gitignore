@@ -1,0 +1,8 @@
+build/bin
+node_modules
+frontend/dist
+
+# Python
+inference/venv
+__pycache__
+*.pyc
