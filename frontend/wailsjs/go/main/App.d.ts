@@ -9,6 +9,12 @@ export function AddCameraToGo2rtc(arg1:number,arg2:string):Promise<void>;
 
 export function AddZone(arg1:database.Zone):Promise<number>;
 
+export function CountCameras():Promise<number>;
+
+export function CountEvents():Promise<number>;
+
+export function DeleteCamera(arg1:number):Promise<void>;
+
 export function GenerateGo2rtcConfig(arg1:Array<database.Camera>):Promise<string>;
 
 export function GetCameras():Promise<Array<database.Camera>>;
@@ -20,3 +26,7 @@ export function GetRTSPStreamURL(arg1:string,arg2:string,arg3:string):Promise<st
 export function GetZonesByCamera(arg1:number):Promise<Array<database.Zone>>;
 
 export function ScanNetwork():Promise<Array<models.DiscoveredCamera>>;
+
+export function UpdateCamera(arg1:number,arg2:string,arg3:string):Promise<void>;
+
+export function UpdateZone(arg1:database.Zone):Promise<void>;

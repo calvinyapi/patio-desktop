@@ -4,5 +4,7 @@ frontend/dist
 
 # Python
 inference/venv
+inference/virtualv
+inference/weights
 __pycache__
 *.pyc

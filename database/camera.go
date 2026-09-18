@@ -45,6 +45,13 @@ func GetCameras(db *sql.DB) ([]Camera, error) {
 	return cameras, rows.Err()
 }
 
+// CountCameras retourne le nombre de caméras enregistrées.
+func CountCameras(db *sql.DB) (int, error) {
+	var count int
+	err := db.QueryRow(`SELECT COUNT(*) FROM cameras`).Scan(&count)
+	return count, err
+}
+
 // GetCameraByID retourne une seule caméra par son ID.
 func GetCameraByID(db *sql.DB, id int64) (*Camera, error) {
 	var c Camera

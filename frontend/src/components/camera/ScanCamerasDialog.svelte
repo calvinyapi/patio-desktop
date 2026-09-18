@@ -4,7 +4,8 @@
   import AddCameraForm from "./CreateCameraAutoDialog.svelte";
   import CreateCameraRTSPLink from "./CreateCameraRTSPLink.svelte";
 
-  let { visible = $bindable() } = $props();
+  let { visible = $bindable(), onadded }: { visible: boolean; onadded?: () => void } =
+    $props();
   let scanning: boolean = $state(true);
   let discoveredCameras: models.DiscoveredCamera[] = $state([]);
   let selectedCamera: models.DiscoveredCamera | null = $state(null);
@@ -40,7 +41,7 @@
       aria-label="Fermer">&times;</button
     >
     {#if selectedCamera}
-      <AddCameraForm bind:selectedCamera />
+      <AddCameraForm bind:selectedCamera {onadded} />
     {:else if showManualForm}
       <button
         class="btn-back"
@@ -49,7 +50,7 @@
         }}>&larr; Retour</button
       >
       <h2>Ajouter via lien RTSP</h2>
-      <CreateCameraRTSPLink />
+      <CreateCameraRTSPLink {onadded} />
     {:else}
       <h2>Scan du réseau</h2>
       <div class="camera-shelf">
@@ -101,7 +102,7 @@
 
   .panel {
     position: relative;
-    background: #fff;
+    background: var(--color-surface);
     border-radius: var(--radius-lg);
     padding: 2rem;
     min-width: 360px;
@@ -121,7 +122,7 @@
     border-radius: 4px;
     font-size: 1.1rem;
     line-height: 1;
-    color: #888;
+    color: var(--color-text-muted);
     cursor: pointer;
     transition:
       background-color 0.1s ease,
@@ -129,27 +130,27 @@
   }
 
   .btn-close:hover {
-    background: #f0f0f0;
-    color: #222;
+    background: var(--color-hover);
+    color: var(--color-text);
   }
 
   .btn-back {
     all: unset;
     font-size: 0.8rem;
-    color: #888;
+    color: var(--color-text-muted);
     cursor: pointer;
     margin-bottom: 0.75rem;
   }
 
   .btn-back:hover {
-    color: #222;
+    color: var(--color-text);
   }
 
   .camera-shelf {
     margin-top: 1rem;
     max-height: 280px;
     overflow-y: auto;
-    border: 1px solid #eee;
+    border: 1px solid var(--color-border-subtle);
     border-radius: var(--radius-md);
   }
 
@@ -159,7 +160,7 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 0.6rem 0.85rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--color-border-subtle);
     transition: background-color 0.1s ease;
   }
 
@@ -168,12 +169,12 @@
   }
 
   .camera-item:hover {
-    background: #fafafa;
+    background: var(--color-bg-subtle);
   }
 
   .camera-name {
     font-size: 0.85rem;
-    color: #333;
+    color: var(--color-text);
     white-space: nowrap;
   }
 
@@ -181,7 +182,7 @@
     font-size: 0.75rem;
     font-family:
       ui-monospace, SFMono-Regular, "Roboto Mono", Consolas, monospace;
-    color: #999;
+    color: var(--color-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -190,7 +191,7 @@
   .empty {
     padding: 0.85rem;
     font-size: 0.85rem;
-    color: #999;
+    color: var(--color-text-muted);
     text-align: center;
   }
 
@@ -202,10 +203,10 @@
     text-align: center;
     margin-top: 0.75rem;
     padding: 0.5rem 0.9rem;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
-    color: #444;
+    color: var(--color-text);
     cursor: pointer;
     transition:
       background-color 0.1s ease,
@@ -213,7 +214,7 @@
   }
 
   .btn-manual:hover {
-    background: #fafafa;
-    border-color: #ccc;
+    background: var(--color-bg-subtle);
+    border-color: var(--color-text-muted);
   }
 </style>

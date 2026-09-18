@@ -2,7 +2,10 @@
   import { database } from '../../../wailsjs/go/models';
   import CameraViewWindow from './CameraViewWindow.svelte';
 
-  let { camera }: { camera: database.Camera } = $props();
+  let {
+    camera,
+    ondeleted,
+  }: { camera: database.Camera; ondeleted?: (id: number) => void } = $props();
 
   let showView: boolean = $state(false);
 </script>
@@ -13,7 +16,7 @@
   <p>{camera.rtsp_url}</p>
 </button>
 
-<CameraViewWindow camera={camera} bind:visible={showView} />
+<CameraViewWindow camera={camera} bind:visible={showView} {ondeleted} />
 
 
 
@@ -22,8 +25,8 @@
   box-sizing: border-box;
   border-radius: var(--radius-md);
   overflow: hidden; /* pour que le contenu (ex: image) respecte aussi les coins arrondis */
-  border: 1px solid #eee;
-  background: #fff;
+  border: 1px solid var(--color-border-subtle);
+  background: var(--color-surface);
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   padding: 1.25rem;
@@ -46,7 +49,7 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #bbb;
+  background: var(--color-border-strong);
 }
 
 .status.active {
@@ -63,7 +66,7 @@ p {
   margin: 0;
   font-size: 0.75rem;
   font-family: ui-monospace, SFMono-Regular, "Roboto Mono", Consolas, monospace;
-  color: #777;
+  color: var(--color-text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

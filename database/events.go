@@ -28,6 +28,13 @@ func AddEvent(db *sql.DB, e Event) (int64, error) {
 	return res.LastInsertId()
 }
 
+// CountEvents retourne le nombre total d'events enregistrés.
+func CountEvents(db *sql.DB) (int, error) {
+	var count int
+	err := db.QueryRow(`SELECT COUNT(*) FROM events`).Scan(&count)
+	return count, err
+}
+
 // GetUnsyncedEvents retourne tous les events pas encore envoyés à PATIO-API.
 // C'est cette fonction que le ticker de sync appellera périodiquement.
 func GetUnsyncedEvents(db *sql.DB) ([]Event, error) {

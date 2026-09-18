@@ -53,6 +53,8 @@ export namespace database {
 	    x2: number;
 	    y2: number;
 	    threshold_seconds: number;
+	    is_critical: boolean;
+	    created_at: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new Zone(source);
@@ -68,6 +70,8 @@ export namespace database {
 	        this.x2 = source["x2"];
 	        this.y2 = source["y2"];
 	        this.threshold_seconds = source["threshold_seconds"];
+	        this.is_critical = source["is_critical"];
+	        this.created_at = source["created_at"];
 	    }
 	}
 

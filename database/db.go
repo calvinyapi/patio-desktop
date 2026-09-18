@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "modernc.org/sqlite"
 )
@@ -48,6 +49,7 @@ func createSchema(db *sql.DB) error {
 		x2 INTEGER NOT NULL,
 		y2 INTEGER NOT NULL,
 		threshold_seconds INTEGER DEFAULT 5,
+		is_critical BOOLEAN DEFAULT true,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (camera_id) REFERENCES cameras(id) ON DELETE CASCADE
 	);
@@ -67,6 +69,20 @@ func createSchema(db *sql.DB) error {
 	CREATE INDEX IF NOT EXISTS idx_zones_camera ON zones(camera_id);
 	`
 
-	_, err := db.Exec(schema)
-	return err
+	if _, err := db.Exec(schema); err != nil {
+		return err
+	}
+
+	// Migrations best-effort : CREATE TABLE IF NOT EXISTS ne touche pas une
+	// table déjà créée. On ajoute les colonnes manquantes et on ignore
+	// l'erreur "duplicate column name" quand elles existent déjà.
+	migrations := []string{
+		`ALTER TABLE zones ADD COLUMN is_critical BOOLEAN DEFAULT true`,
+	}
+	for _, m := range migrations {
+		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+			return err
+		}
+	}
+	return nil
 }

@@ -3,9 +3,12 @@
   let rtsp_url: string = $state("");
   import { AddCamera } from "../../../wailsjs/go/main/App";
 
+  let { onadded }: { onadded?: () => void } = $props();
+
   async function CreateCameraViaRTSPLink() {
     try {
       await AddCamera(camera_name, rtsp_url);
+      onadded?.();
     } catch (e) {
       console.error("Erreur lors de la création de la caméra :", e);
     }
@@ -46,31 +49,33 @@
 
   .form-group label {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--color-text-secondary);
   }
 
   .form-group input {
     box-sizing: border-box;
     font-size: 0.9rem;
     padding: 0.6rem 0.7rem;
-    border: 1px solid #ddd;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-sm);
   }
 
   .form-group input:focus {
     outline: none;
-    border-color: #999;
+    border-color: var(--color-text);
   }
 
   .form-group input::placeholder {
-    color: #bbb;
+    color: var(--color-text-muted);
   }
 
   .btn-submit {
     all: unset;
     box-sizing: border-box;
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
     font-size: 0.85rem;
     font-weight: 500;
     padding: 0.6rem 1rem;
@@ -80,6 +85,6 @@
   }
 
   .btn-submit:hover {
-    background: #333;
+    background: var(--color-accent-hover);
   }
 </style>

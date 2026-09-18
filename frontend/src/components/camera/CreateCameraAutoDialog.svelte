@@ -1,12 +1,16 @@
 <script lang="ts">
   import { models } from "../../../wailsjs/go/models";
   import { GetRTSPStreamURL, AddCamera } from "../../../wailsjs/go/main/App";
-  let { selectedCamera = $bindable<models.DiscoveredCamera | null>(null) } =
+  let {
+    selectedCamera = $bindable(null),
+    onadded,
+  }: { selectedCamera: models.DiscoveredCamera | null; onadded?: () => void } =
     $props();
   let username: string = $state("");
   let password: string = $state("");
 
   async function CreateACamera() {
+    if (!selectedCamera) return; // le formulaire n'est monté que si une caméra est sélectionnée
     try {
       let streaming_url = await GetRTSPStreamURL(
         selectedCamera.endpoint,
@@ -15,6 +19,7 @@
       );
       console.log("CACACAufiziauaza", selectedCamera.endpoint);
       await AddCamera(selectedCamera.name, streaming_url);
+      onadded?.();
     } catch (e) {
       console.error("Erreur lors de la récupération du stream:", e);
     }
@@ -74,13 +79,13 @@
   .btn-back {
     all: unset;
     font-size: 0.8rem;
-    color: #888;
+    color: var(--color-text-muted);
     cursor: pointer;
     margin-bottom: 0.75rem;
   }
 
   .btn-back:hover {
-    color: #222;
+    color: var(--color-text);
   }
 
   .form-group {
@@ -92,27 +97,29 @@
 
   .form-group label {
     font-size: 0.8rem;
-    color: #666;
+    color: var(--color-text-secondary);
   }
 
   .form-group input {
     box-sizing: border-box;
     font-size: 0.9rem;
     padding: 0.6rem 0.7rem;
-    border: 1px solid #ddd;
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-sm);
   }
 
   .form-group input:focus {
     outline: none;
-    border-color: #999;
+    border-color: var(--color-text);
   }
 
   .btn-submit {
     all: unset;
     box-sizing: border-box;
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
     font-size: 0.85rem;
     font-weight: 500;
     padding: 0.6rem 1rem;
@@ -122,6 +129,6 @@
   }
 
   .btn-submit:hover {
-    background: #333;
+    background: var(--color-accent-hover);
   }
 </style>

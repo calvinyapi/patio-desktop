@@ -79,8 +79,8 @@
     display: flex;
     flex-direction: column;
     width: 220px;
-    background-color: #fafafa;
-    border-right: 1px solid #e5e5e5;
+    background-color: var(--color-bg-subtle);
+    border-right: 1px solid var(--color-border);
     padding: 1rem;
     height: 100vh;
     gap: 4px;
@@ -91,7 +91,7 @@
     font-weight: 700;
     font-size: 1.6rem;
     letter-spacing: 0.01em;
-    color: #222;
+    color: var(--color-text);
     padding: 0.5rem;
     margin-bottom: 1rem;
   }
@@ -107,7 +107,7 @@
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
     font-weight: 400;
-    color: #666;
+    color: var(--color-text-secondary);
     cursor: pointer;
     transition:
       background-color 0.1s ease,
@@ -115,8 +115,8 @@
   }
 
   .sidebar button:hover {
-    background-color: #f0f0f0;
-    color: #222;
+    background-color: var(--color-hover);
+    color: var(--color-text);
   }
 
   .btn-settings {

@@ -14,6 +14,18 @@ export function AddZone(arg1) {
   return window['go']['main']['App']['AddZone'](arg1);
 }
 
+export function CountCameras() {
+  return window['go']['main']['App']['CountCameras']();
+}
+
+export function CountEvents() {
+  return window['go']['main']['App']['CountEvents']();
+}
+
+export function DeleteCamera(arg1) {
+  return window['go']['main']['App']['DeleteCamera'](arg1);
+}
+
 export function GenerateGo2rtcConfig(arg1) {
   return window['go']['main']['App']['GenerateGo2rtcConfig'](arg1);
 }
@@ -36,4 +48,12 @@ export function GetZonesByCamera(arg1) {
 
 export function ScanNetwork() {
   return window['go']['main']['App']['ScanNetwork']();
+}
+
+export function UpdateCamera(arg1, arg2, arg3) {
+  return window['go']['main']['App']['UpdateCamera'](arg1, arg2, arg3);
+}
+
+export function UpdateZone(arg1) {
+  return window['go']['main']['App']['UpdateZone'](arg1);
 }

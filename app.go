@@ -56,6 +56,11 @@ func (a *App) GetCameras() ([]database.Camera, error) {
 	return database.GetCameras(a.db)
 }
 
+// CountCameras retourne le nombre de caméras enregistrées (appelable depuis Svelte)
+func (a *App) CountCameras() (int, error) {
+	return database.CountCameras(a.db)
+}
+
 func (a *App) AddCamera(name, rtspURL string) (int64, error) {
 	id, err := database.AddCamera(a.db, name, rtspURL)
 	if err != nil {
@@ -85,6 +90,11 @@ func (a *App) GetEventsByZone(zoneID int64) ([]database.Event, error) {
 	return database.GetEventsByZone(a.db, zoneID)
 }
 
+// CountEvents retourne le nombre total d'events enregistrés (appelable depuis Svelte)
+func (a *App) CountEvents() (int, error) {
+	return database.CountEvents(a.db)
+}
+
 // ScanNetwork discovers ONVIF cameras on the network (appelable depuis Svelte)
 func (a *App) ScanNetwork() ([]models.DiscoveredCamera, error) {
 	return services.ScanNetwork()
@@ -101,4 +111,25 @@ func (a *App) GenerateGo2rtcConfig(listeCamera []database.Camera) string {
 // AddCameraToGo2rtc enregistre le flux d'une caméra auprès de go2rtc (appelable depuis Svelte)
 func (a *App) AddCameraToGo2rtc(camID int64, rtspURL string) error {
 	return services.AddCameraToGo2rtc(camID, rtspURL)
+}
+
+func (a *App) UpdateCamera(camID int64, name, rtspURL string) error {
+	return database.UpdateCamera(a.db, camID, name, rtspURL)
+}
+
+// DeleteCamera supprime une caméra, ainsi que ses zones et events (appelable depuis Svelte)
+func (a *App) DeleteCamera(camID int64) error {
+	if err := database.DeleteCamera(a.db, camID); err != nil {
+		return err
+	}
+
+	if err := services.RemoveCameraFromGo2rtc(camID); err != nil {
+		log.Println("Error removing camera from go2rtc: ", err)
+	}
+
+	return nil
+}
+
+func (a *App) UpdateZone(z database.Zone) error {
+	return database.UpdateZone(a.db, z)
 }

@@ -41,3 +41,21 @@ func AddCameraToGo2rtc(camID int64, rtspURL string) error {
 
 	return nil
 }
+
+// RemoveCameraFromGo2rtc retire le flux d'une caméra enregistré auprès de go2rtc.
+func RemoveCameraFromGo2rtc(camID int64) error {
+	url := fmt.Sprintf("http://localhost:1984/api/streams?src=camera_%d", camID)
+
+	req, err := http.NewRequest("DELETE", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
+}

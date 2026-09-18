@@ -1,10 +1,34 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { database } from "../../../wailsjs/go/models";
+  import {
+    AddZone,
+    DeleteCamera,
+    GetZonesByCamera,
+    UpdateZone,
+  } from "../../../wailsjs/go/main/App";
 
   let {
     camera,
     visible = $bindable(),
-  }: { camera: database.Camera; visible: boolean } = $props();
+    ondeleted,
+  }: {
+    camera: database.Camera;
+    visible: boolean;
+    ondeleted?: (id: number) => void;
+  } = $props();
+
+  let critique = $state(true); // zone critique par défaut (cf. is_critical DEFAULT true)
+
+  // window.confirm() n'est pas fiable dans la webview Wails (souvent aucune
+  // boîte de dialogue ne s'affiche et l'appel renvoie false) -> confirmation
+  // repliée directement dans l'entête au lieu d'un confirm() natif.
+  let confirmingDelete = $state(false);
+
+  // id de la zone existante pour cette caméra, si l'app en a déjà une :
+  // null tant qu'on n'a rien chargé/enregistré -> save() fera un AddZone,
+  // sinon un UpdateZone. Cette fenêtre ne gère qu'une seule zone par caméra.
+  let zoneId: number | null = $state(null);
 
   let containerEl: HTMLDivElement;
   let containerWidth: number = $state(0);
@@ -25,6 +49,23 @@
       x2 = containerWidth * 0.75;
       y2 = containerHeight * 0.75;
       initialized = true;
+    }
+  });
+
+  // Charge la zone existante de cette caméra (s'il y en a une) pour que
+  // "Enregistrer" mette à jour au lieu de dupliquer. Ce composant n'est monté
+  // qu'une fois par CameraCard (visible bascule juste son affichage).
+  onMount(async () => {
+    const zones = await GetZonesByCamera(camera.id);
+    const existing = zones[0];
+    if (existing) {
+      zoneId = existing.id;
+      x1 = existing.x1;
+      y1 = existing.y1;
+      x2 = existing.x2;
+      y2 = existing.y2;
+      critique = existing.is_critical;
+      initialized = true; // empêche le $effect de remettre le rectangle par défaut
     }
   });
 
@@ -68,6 +109,34 @@
 
   function close() {
     visible = false;
+    confirmingDelete = false; // repart propre à la prochaine ouverture
+  }
+
+  async function deleteCamera() {
+    await DeleteCamera(camera.id);
+    ondeleted?.(camera.id);
+    close();
+  }
+
+  async function save() {
+    const zone = database.Zone.createFrom({
+      id: zoneId ?? 0,
+      camera_id: camera.id,
+      name: "",
+      x1: Math.round(Math.min(x1, x2)),
+      y1: Math.round(Math.min(y1, y2)),
+      x2: Math.round(Math.max(x1, x2)),
+      y2: Math.round(Math.max(y1, y2)),
+      threshold_seconds: 5,
+      is_critical: critique,
+    });
+
+    if (zoneId !== null) {
+      await UpdateZone(zone);
+    } else {
+      zoneId = await AddZone(zone); // les prochains "Enregistrer" mettront à jour
+    }
+    close();
   }
 
   function onKeydown(e: KeyboardEvent) {
@@ -81,7 +150,20 @@
   <div class="panel">
     <button class="btn-close" onclick={close} aria-label="Fermer">&times;</button>
 
-    <h2>{camera.name}</h2>
+    <div class="header">
+      <h2>{camera.name}</h2>
+      {#if confirmingDelete}
+        <div class="confirm-delete">
+          <span>Supprimer cette caméra ?</span>
+          <button class="btn-cancel" onclick={() => (confirmingDelete = false)}>Annuler</button>
+          <button class="btn-confirm" onclick={deleteCamera}>Oui, supprimer</button>
+        </div>
+      {:else}
+        <button class="btn-delete" onclick={() => (confirmingDelete = true)}>
+          Supprimer la caméra
+        </button>
+      {/if}
+    </div>
 
     <div class="content">
       <div
@@ -131,23 +213,35 @@
         </div>
 
         <div class="zone-inputs">
+          <div class="coords">
+            <label>
+              x1
+              <input type="number" bind:value={x1} />
+            </label>
+            <label>
+              y1
+              <input type="number" bind:value={y1} />
+            </label>
+            <label>
+              x2
+              <input type="number" bind:value={x2} />
+            </label>
+            <label>
+              y2
+              <input type="number" bind:value={y2} />
+            </label>
+          </div>
+
           <label>
-            x1
-            <input type="number" bind:value={x1} />
-          </label>
-          <label>
-            y1
-            <input type="number" bind:value={y1} />
-          </label>
-          <label>
-            x2
-            <input type="number" bind:value={x2} />
-          </label>
-          <label>
-            y2
-            <input type="number" bind:value={y2} />
+            critique
+            <select bind:value={critique}>
+              <option value={false}>Non</option>
+              <option value={true}>Oui</option>
+            </select>
           </label>
         </div>
+
+        <button class="btn-save" onclick={save}>Enregistrer</button>
       </div>
     </div>
   </div>
@@ -172,7 +266,7 @@
 
   .panel {
     position: relative;
-    background: #fff;
+    background: var(--color-surface);
     border-radius: var(--radius-lg);
     padding: 2rem;
     width: 920px;
@@ -193,7 +287,7 @@
     border-radius: 4px;
     font-size: 1.1rem;
     line-height: 1;
-    color: #888;
+    color: var(--color-text-muted);
     cursor: pointer;
     transition:
       background-color 0.1s ease,
@@ -201,13 +295,81 @@
   }
 
   .btn-close:hover {
-    background: #f0f0f0;
-    color: #222;
+    background: var(--color-hover);
+    color: var(--color-text);
   }
 
-  h2 {
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
     margin-bottom: 1rem;
-    padding-right: 1.5rem;
+    padding-right: 1.5rem; /* laisse la place au bouton "Fermer" */
+  }
+
+  .header h2 {
+    margin: 0;
+  }
+
+  .btn-delete {
+    all: unset;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: #b3413a;
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition:
+      background-color 0.12s ease,
+      color 0.12s ease;
+  }
+
+  .btn-delete:hover {
+    /* lavis translucide plutôt qu'un fond clair fixe : reste lisible en mode nuit */
+    background: rgba(179, 65, 58, 0.12);
+  }
+
+  .confirm-delete {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  .btn-cancel {
+    all: unset;
+    box-sizing: border-box;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+  }
+
+  .btn-cancel:hover {
+    background: var(--color-bg-subtle);
+  }
+
+  .btn-confirm {
+    all: unset;
+    box-sizing: border-box;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #fff;
+    background: #b3413a;
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+  }
+
+  .btn-confirm:hover {
+    background: #8f2d2d;
   }
 
   .content {
@@ -269,7 +431,8 @@
 
   .side {
     flex-shrink: 0;
-    width: 180px;
+    width: 196px;
+    min-height: 440px; /* aligne le bas de la colonne sur celui de la vidéo */
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -310,23 +473,78 @@
   .zone-inputs {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.85rem;
+  }
+
+  .coords {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.55rem;
   }
 
   .zone-inputs label {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 0.35rem;
     font-size: 0.75rem;
     color: var(--color-text-secondary);
   }
 
-  .zone-inputs input {
+  .zone-inputs input,
+  .zone-inputs select {
     box-sizing: border-box;
     width: 100%;
+    height: 34px;
+    font-family: inherit;
     font-size: 0.9rem;
-    padding: 0.4rem 0.5rem;
-    border: 2px solid var(--color-border);
+    color: var(--color-text);
+    padding: 0 0.6rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
+    transition: border-color 0.12s ease;
+  }
+
+  .zone-inputs input:focus,
+  .zone-inputs select:focus {
+    outline: none;
+    border-color: var(--color-text);
+  }
+
+  .zone-inputs input::-webkit-outer-spin-button,
+  .zone-inputs input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .zone-inputs select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 1.6rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.65rem center;
+  }
+
+  .btn-save {
+    all: unset;
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    margin-top: auto; /* ancre le bouton en bas de la colonne */
+    text-align: center;
+    background: var(--color-accent);
+    color: var(--color-accent-contrast);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-save:hover {
+    background: var(--color-accent-hover);
   }
 </style>

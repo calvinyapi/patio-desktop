@@ -1,12 +1,15 @@
 <script lang="ts">
   import { database } from "../../../wailsjs/go/models";
   import CameraCard from "./CameraCard.svelte";
-  let { cameras }: { cameras: database.Camera[] } = $props();
+  let {
+    cameras,
+    ondeleted,
+  }: { cameras: database.Camera[]; ondeleted?: (id: number) => void } = $props();
 </script>
 
 <div class="camera-list">
   {#each cameras as camera (camera.id)}
-    <CameraCard {camera} />
+    <CameraCard {camera} {ondeleted} />
   {/each}
 </div>
 
