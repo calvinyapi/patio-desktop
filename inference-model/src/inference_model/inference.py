@@ -7,5 +7,4 @@ def inference():
     ret, frame = cap.read()
     if not ret:
         print("Failed to capture frame from camera.")
-        break
-    fr
+    
